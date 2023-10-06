@@ -17,12 +17,12 @@ router.post("/register", async (req, res) => {
 		req.body.password = hashedPassword;
 		const newUser = await User.create(req.body);
 		await newUser.save();
-		res.send({
+		return res.send({
 			success: true,
 			message: "User created",
 		});
 	} catch (err) {
-		res.send({
+		return res.send({
 			message: err.message,
 			success: false,
 		});
@@ -55,33 +55,61 @@ router.post("/login", async (req, res) => {
 				expiresIn: "1d",
 			}
 		);
-		res.send({
+		return res.send({
 			message: "Login successful",
 			success: true,
 			data: token,
 		});
 	} catch (err) {
-		res.send({
+		return res.send({
 			message: err.message,
 			success: false,
 		});
 	}
 });
 
-router.get("/get-current-user", authMiddleware, async (req, res) => {
+router.get("/get-current-user", async (req, res) => {
+	try {
+		const token = req.headers.authorization.split(" ")[1];
+		const decoded = jwt.verify(token, process.env.JWT_SECRET);
+		req.body.userId = decoded.userId;
+	} catch (error) {
+		return res.send({ message: error.message, success: false });
+	}
 	try {
 		const user = await User.findOne({ _id: req.body.userId });
-		res.send({
+		return res.send({
 			success: true,
 			message: "User fetched successfully",
 			data: user,
 		});
 	} catch (error) {
-		res.send({
+		return res.send({
 			message: error.message,
 			success: false,
 		});
 	}
 });
-
+router.get("/get-all-users", async (req, res) => {
+	try {
+		const token = req.headers.authorization.split(" ")[1];
+		const decoded = jwt.verify(token, process.env.JWT_SECRET);
+		req.body.userId = decoded.userId;
+	} catch (error) {
+		return res.send({ message: error.message, success: false });
+	}
+	try {
+		const allUsers = await User.find({ _id: { $ne: req.body.userId } });
+		return res.send({
+			success: true,
+			message: "Users fetched successfully",
+			data: allUsers,
+		});
+	} catch (error) {
+		return res.send({
+			success: false,
+			message: error.message,
+		});
+	}
+});
 module.exports = router;
