@@ -28,4 +28,9 @@ io.on("connection", (socket) => {
 app.use("/api/users", usersRoute);
 app.use("/api/chats", chatsRoute);
 app.use("/api/messages", messagesRoute);
+app.use("api/test", (req, res) => {
+	return res.status(200).json({
+		message: "Connectify Successfully running on EC2",
+	});
+});
 server.listen(port, () => console.log(`server okay running on port ${port}`));
